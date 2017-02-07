@@ -1,31 +1,52 @@
+'use strict';
+
+const FBSDK = require('react-native-fbsdk');
+
 import React, { Component } from 'react';
 import {
   AppRegistry,
   StyleSheet,
   Text,
+  TouchableHighlight,
   View,
-  TouchableHighlight
 } from 'react-native';
-const FBSDK = require('react-native-fbsdk');
 const {
   LoginButton,
-  LoginManager
+  ShareDialog,
 } = FBSDK;
 
-export default class MasProject2 extends Component {
+class MasProject2 extends Component {
+  constructor(props) {
+    super(props);
+    const shareLinkContent = {
+      contentType: 'link',
+      contentUrl: 'https://www.facebook.com/',
+    };
 
-  _fbLoginManager() {
-    LoginManager.logInWithReadPermissions(["public_profile"]).then(
+    this.state = {
+      shareLinkContent: shareLinkContent,
+    };
+  }
+
+  shareLinkWithShareDialog() {
+    var tmp = this;
+    ShareDialog.canShow(this.state.shareLinkContent).then(
+      function(canShow) {
+        if (canShow) {
+          return ShareDialog.show(tmp.state.shareLinkContent);
+        }
+      }
+    ).then(
       function(result) {
         if (result.isCancelled) {
-          alert('Login was cancelled');
+          alert('Share cancelled');
         } else {
-          alert('Login was successful with permissions: '
-            + result.grantedPermissions.toString());
+          alert('Share success with postId: '
+            + result.postId);
         }
       },
       function(error) {
-        alert('Login failed with error: ' + error);
+        alert('Share fail with error: ' + error);
       }
     );
   }
@@ -33,36 +54,11 @@ export default class MasProject2 extends Component {
   render() {
     return (
       <View style={styles.container}>
-        <Text style={styles.welcome}>
-          Welcome to React Native!
-        </Text>
-        <Text style={styles.instructions}>
-          To get started, edit index.android.js
-        </Text>
-        <Text style={styles.instructions}>
-          Double tap R on your keyboard to reload,{'\n'}
-          Shake or press menu button for dev menu
-        </Text>
-        <View style={{borderWidth: 2, marginBottom: 20}}>
-        <TouchableHighlight
-          onPress={this._fbLoginManager}>
-          <Text>Login with fbLoginManager</Text>
+        <LoginButton />
+        <TouchableHighlight style={styles.share}
+          onPress={this.shareLinkWithShareDialog.bind(this)}>
+          <Text style={styles.shareText}>Share link with ShareDialog</Text>
         </TouchableHighlight>
-        </View>
-        <LoginButton
-          readPermissions={['public_profile']}
-          onLoginFinished={
-            (error, result) => {
-              if (error) {
-                alert("Login failed with error: " + result.error);
-              } else if (result.isCancelled) {
-                alert("Login was cancelled");
-              } else {
-                alert("Login was successful with permissions: " + result.grantedPermissions)
-              }
-            }
-          }
-          onLogoutFinished={() => alert("User logged out")}/>
       </View>
     );
   }
@@ -75,15 +71,9 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     backgroundColor: '#F5FCFF',
   },
-  welcome: {
+  shareText: {
     fontSize: 20,
-    textAlign: 'center',
     margin: 10,
-  },
-  instructions: {
-    textAlign: 'center',
-    color: '#333333',
-    marginBottom: 5,
   },
 });
 
